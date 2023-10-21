@@ -5,6 +5,7 @@ import static com.example.edumatch.util.LoginSignupHelper.isStartTimeBeforeEndTi
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.TimePickerDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -34,6 +35,7 @@ public class AvailabilityActivity extends AppCompatActivity implements DayOfTheW
     private Button setTimeButton;
 
    private String currentDay;
+   private Intent newIntent;
 
 
     @Override
@@ -48,6 +50,11 @@ public class AvailabilityActivity extends AppCompatActivity implements DayOfTheW
 
         initializeDayButtons();
         initializeSetTimeButton();
+
+        newIntent = new Intent(AvailabilityActivity.this, TuteeHomeActivity.class);
+
+
+
     }
 
     private void initializeSetTimeButton(){

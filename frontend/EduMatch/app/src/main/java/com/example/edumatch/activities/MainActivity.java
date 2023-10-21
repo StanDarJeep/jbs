@@ -130,6 +130,9 @@ public class MainActivity extends AppCompatActivity {
         String userInput = usernameEditText.getText().toString();
         String passwordInput = passwordEditText.getText().toString();
 
+        Intent intent = new Intent(MainActivity.this, TuteeHomeActivity.class);
+        startActivity(intent);
+
         // Todo: Put username and password in post request to try to signin
 
         Toast.makeText(MainActivity.this, "User input: " + userInput, Toast.LENGTH_SHORT).show();
