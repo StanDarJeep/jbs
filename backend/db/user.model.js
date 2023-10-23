@@ -40,6 +40,42 @@ const locationSchema = new mongoose.Schema({
     long: Number
 })
 
+const userFeedbackSchema = new mongoose.Schema({
+    reviewerId: String,
+    attitude: {
+        type: Number,
+        min: 1,
+        max: 5,
+        default: 1
+    },
+    proficiencyWithSubject: {
+        type: Number,
+        min: 1,
+        max: 5,
+        default: 1
+    },
+    organization: {
+        type: Number,
+        min: 1,
+        max: 5,
+        default: 1
+    },
+    noShow: Boolean,
+    late: Boolean,
+    overallRating: {
+        type: Number,
+        min: 0,
+        max: 5,
+        default: 0
+    },
+    comment: String,
+    courses: [
+        {
+            type: String
+        }
+    ],
+}, { timestamps: true })
+
 const User = mongoose.model(
     "User",
     new mongoose.Schema({
@@ -78,7 +114,17 @@ const User = mongoose.model(
         useGoogleCalendar: {
             type: Boolean,
             default: false
+        },
+        userFeedback: [
+            {
+                type: userFeedbackSchema
+            }
+        ],
+        overallRating: {
+            type: Number,
+            default: 0
         }
+
     })
 )
 
