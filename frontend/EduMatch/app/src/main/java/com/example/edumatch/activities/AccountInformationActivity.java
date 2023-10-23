@@ -5,7 +5,6 @@ import static com.example.edumatch.util.LoginSignupHelper.printBundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -51,7 +50,6 @@ public class AccountInformationActivity extends AppCompatActivity {
                 LabelAndEditTextView view = findViewById(viewIds[i]);
                 view.setVisibility(View.GONE);
             }
-
         }
     }
 
@@ -72,7 +70,6 @@ public class AccountInformationActivity extends AppCompatActivity {
         int[] viewIds = {R.id.create_name, R.id.create_email, R.id.create_phone_number, R.id.create_userName, R.id.create_password};
         String[] keys = {"name", "email", "phoneNumber", "username", "password"};
 
-
         int numberOfIters = viewIds.length;
         if (userData.getBoolean("useGoogle")) {
             numberOfIters = viewIds.length - 2;
@@ -83,16 +80,9 @@ public class AccountInformationActivity extends AppCompatActivity {
             userData.putString(keys[i], userDataString);
         }
         return userData;
-
     }
 
     private void goToNewActivity() {
-        SharedPreferences sharedPreferences = getSharedPreferences("MyPrefs", MODE_PRIVATE);
-        sharedPreferences.getString("username", userData.getString("username", ""));
-        sharedPreferences.getString("email", userData.getString("email", ""));
-        sharedPreferences.getString("name", userData.getString("name", ""));
-        sharedPreferences.getString("phone", userData.getString("phoneNumber", ""));
-
         Intent newIntent = new Intent(AccountInformationActivity.this, UniversityInformationActivity.class);
         Bundle userData = updateBundle();
         printBundle(userData, "");
