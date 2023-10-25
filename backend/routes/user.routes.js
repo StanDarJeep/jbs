@@ -5,5 +5,5 @@ const db = require("../db")
 const User = db.user
 
 module.exports = function (app) {
-    app.get("/api/user/publicProfile", profileController.getPublicProfile)
+    app.get("/user/publicProfile", profileController.getPublicProfile)
 };

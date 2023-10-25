@@ -1,6 +1,7 @@
 const { UserType } = require("../constants/user.types")
 const db = require("../db")
 const jwt = require("jsonwebtoken")
+const ratingController = require("./rating.controller")
 
 const User = db.user
 
@@ -15,7 +16,7 @@ exports.getPublicProfile = (req, res) => {
             res.status(404).send({ message: "User not found."})
         }
         
-        var ratings = user.userFeedback
+        var ratings = user.userReviews
         ratings.sort((fb1, fb2) => fb2.rating - fb1.rating)
         var top2Ratings
         if (ratings.length <= 2) {
@@ -26,7 +27,7 @@ exports.getPublicProfile = (req, res) => {
 
         var data = {
             displayedName: user.displayedName,
-            overallRating: user.overallRating,
+            overallRating: ratingController.getTutorOverallRating(ratings),
             bio: user.bio,
             school: user.school,
             program: user.program,

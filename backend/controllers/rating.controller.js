@@ -2,19 +2,14 @@ const db = require("../db")
 
 const User = db.user
 
-exports.getTutorOverallRatingPerOneReivew = (userFeedback) => {
-    const numCriteria = 3
-    return (
-        userFeedback.attitude + 
-        userFeedback.proficiencyWithSubject + 
-        userFeedback.organization
-    )/numCriteria
-}
 
-exports.getTutorOverallRating = (ratingList) => {
-    var sum = 0
-    for (rating of ratingList) {
-        sum += rating.overallRating
+exports.getTutorOverallRating = (userReviews) => {
+    if (userReviews.length == 0) {
+        return 0
     }
-    return sum/ratingList.length
+    var sum = 0
+    for (reviews of userReviews) {
+        sum += reviews.rating
+    }
+    return sum/userReviews.length
 }

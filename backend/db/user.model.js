@@ -40,7 +40,7 @@ const locationSchema = new mongoose.Schema({
     long: Number
 })
 
-const userFeedbackSchema = new mongoose.Schema({
+const userReviewSchema = new mongoose.Schema({
     reviewerId: String,
     noShow: Boolean,
     late: Boolean,
@@ -106,9 +106,9 @@ const User = mongoose.model(
             type: Boolean,
             default: false
         },
-        userFeedback: [
+        userReviews: [
             {
-                type: userFeedbackSchema
+                type: userReviewSchema
             }
         ],
         overallRating: {
