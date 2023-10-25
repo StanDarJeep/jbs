@@ -1,6 +1,7 @@
 package com.example.edumatch.activities;
 
-import static com.example.edumatch.util.LoginSignupHelper.printBundle;
+import static com.example.edumatch.util.LoginSignupHelper.printSharedPreferences;
+import static com.example.edumatch.util.NetworkUtils.postDataToBackend;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
@@ -8,7 +9,9 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -26,6 +29,10 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.common.api.Scope;
 import com.google.android.gms.tasks.Task;
+import com.google.api.services.calendar.CalendarScopes;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -34,10 +41,18 @@ public class MainActivity extends AppCompatActivity {
     private GoogleSignInClient mGoogleSignInClient;
     final static String TAG = "MainActivity";
 
+    private String userInput, passwordInput;
+
+    private String authCode, idToken;
+
+    private Boolean newUser;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        clearPreferences();
 
         initSignInButton();
 
@@ -73,9 +88,10 @@ public class MainActivity extends AppCompatActivity {
     private void initGoogleSignIn() {
         // Google Sign In / Sign Up
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.server_client_id))
-                .requestScopes(new Scope("https://www.googleapis.com/auth/calendar"))
                 .requestEmail()
+                .requestScopes(new Scope(CalendarScopes.CALENDAR))
+                .requestIdToken(getString(R.string.server_client_id))
+                .requestServerAuthCode(getString(R.string.server_client_id))
                 .build();
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
@@ -93,12 +109,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void googleSignIn() {
-        if (account == null) {
-            Intent signInIntent = mGoogleSignInClient.getSignInIntent();
-            googleSignInActivityResultLauncher.launch(signInIntent);
-        } else {
-            Toast.makeText(MainActivity.this, "Already signed in!", Toast.LENGTH_LONG).show();
-        }
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        googleSignInActivityResultLauncher.launch(signInIntent);
 
     }
 
@@ -117,14 +129,21 @@ public class MainActivity extends AppCompatActivity {
     private void handleGoogleSignInResult(Task<GoogleSignInAccount> completedTask) {
         try {
             account = completedTask.getResult(ApiException.class);
-
-            // Todo: Put IdToken and ServerAuthCode into a server request
-            // Todo: If IdToken matches a known user in our database, go to homepage. Else, go to sign up flow
-            Toast.makeText(MainActivity.this, "Successful Sign In" + account.getIdToken(), Toast.LENGTH_LONG).show();
+            idToken = account.getIdToken();
+            authCode = account.getServerAuthCode();
+            Log.d("GooglePost", idToken);
+            Log.d("GooglePost", "authcode is " + authCode);
             useGoogle = true;
-            goToSignUpActivity();
+            Boolean success = postGoogleAuth();
+            if (success) {
 
-
+                if(newUser){
+                    goToSignUpActivity();
+                } else {
+//                    Toast.makeText(MainActivity.this, "Go to Homepage", Toast.LENGTH_SHORT).show();
+                    goToHomePage();
+                }
+            }
         } catch (ApiException e) {
             // The ApiException status code indicates the detailed failure reason.
             // Please refer to the GoogleSignInStatusCodes class reference for more information.
@@ -139,27 +158,157 @@ public class MainActivity extends AppCompatActivity {
         LabelAndEditTextView password = findViewById(R.id.password);
         EditText passwordEditText = password.getEnterUserEditText();
 
-        String userInput = usernameEditText.getText().toString();
-        String passwordInput = passwordEditText.getText().toString();
+        userInput = usernameEditText.getText().toString();
+        passwordInput = passwordEditText.getText().toString();
 
-        // Todo: Put username and password in post request to try to signin
+        Boolean success = postSignIn();
 
-        Toast.makeText(MainActivity.this, "User input: " + userInput, Toast.LENGTH_SHORT).show();
-        Toast.makeText(MainActivity.this, "Password: " + passwordInput, Toast.LENGTH_SHORT).show();
+        if (success) {
+            //todo: got to homepage
+
+            Toast.makeText(MainActivity.this, "Sign In Worked", Toast.LENGTH_SHORT).show();
+            goToHomePage();
+        }
     }
 
 
-    private Bundle updateBundle() {
-        Bundle userData = new Bundle();
-        userData.putBoolean("useGoogle",useGoogle);
-        return userData;
+    private void clearPreferences() {
+        Context context = getApplicationContext(); // Replace with your application's context
+        SharedPreferences sharedPreferences = context.getSharedPreferences("AccountPreferences", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.clear(); // Clears all the data in the SharedPreferences file
+        editor.apply(); // Apply the changes
+    }
+
+    private SharedPreferences updatePreferences() {
+        SharedPreferences sharedPreferences = getSharedPreferences("AccountPreferences", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("isEditing", false);
+        editor.putBoolean("useGoogle", useGoogle);
+        editor.commit();
+        return sharedPreferences;
     }
 
     private void goToSignUpActivity() {
-        Intent newIntent = new Intent(MainActivity.this, TutorOrTuteeActivity.class);
-        Bundle userData = updateBundle();
-        printBundle(userData, "");
-        newIntent.putExtras(userData);
+        Intent newIntent = new Intent(MainActivity.this,
+                TutorOrTuteeActivity.class);
+        SharedPreferences sharedPreferences = updatePreferences();
+        printSharedPreferences(sharedPreferences);
         startActivity(newIntent);
+    }
+
+    private void goToHomePage(){
+        // todo: need to check if they are tutor or tutee
+        // todo: go to right view
+        Intent newIntent = new Intent(MainActivity.this,
+                TutorRateActivity.class);
+        startActivity(newIntent);
+    }
+
+
+    private Boolean postSignIn() {
+        JSONObject requestBody = constructSignInRequest();// Create your JSON request body
+        String apiUrl = "https://edumatch.canadacentral.cloudapp.azure.com/api/auth/login";
+
+        JSONObject jsonResponse = postDataToBackend(apiUrl, requestBody, "");
+
+        if (jsonResponse != null) {
+            try {
+                if (jsonResponse.has("errorDetails")) {
+                    JSONObject errorDetails = new JSONObject(jsonResponse.getString("errorDetails"));
+                    if (errorDetails.has("message")) {
+                        String message = errorDetails.getString("message");
+                        if ("Username or password is incorrect".equals(message)) {
+                            // Handle the case where the username already exists
+                            runOnUiThread(() -> {
+                                Toast.makeText(getApplicationContext(), "Username or password is incorrect", Toast.LENGTH_SHORT).show();
+                            });
+                            return false; // Return false to indicate failure
+                        }
+                    }
+                } else {
+                    SharedPreferences sharedPreferences = getSharedPreferences("AccountPreferences", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putString("jwtToken", jsonResponse.getString("jwtToken"));
+                    editor.putString("userType", jsonResponse.getString("type"));
+                    editor.commit();
+                    printSharedPreferences(sharedPreferences);
+                    return true;
+                }
+                Log.d("SignInPost", jsonResponse.toString());
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return false;
+            }
+        } else {
+            Log.d("SignInPost", "jsonResponse was NULL");
+            return false;
+        }
+        return false;
+    }
+
+
+    private Boolean postGoogleAuth() {
+        JSONObject requestBody = constructGoogleRequest();// Create your JSON request body
+        String apiUrl = "https://edumatch.canadacentral.cloudapp.azure.com/api/auth/google";
+
+        JSONObject jsonResponse = postDataToBackend(apiUrl, requestBody, "");
+
+        Log.d("GooglePost", "Finished postDataToBackend" + jsonResponse);
+
+        if (jsonResponse != null) {
+            try {
+                SharedPreferences sharedPreferences = getSharedPreferences("AccountPreferences", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("jwtToken", jsonResponse.getString("jwtToken"));
+                newUser = jsonResponse.getBoolean("newUser");
+
+                editor.commit();
+                printSharedPreferences(sharedPreferences);
+                Log.d("GooglePost", jsonResponse.toString());
+                return true;
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return false;
+            }
+        } else {
+            Log.d("GooglePost", "jsonResponse was NULL");
+            return false;
+        }
+    }
+
+
+    private JSONObject constructSignInRequest() {
+        try {
+            JSONObject requestBody = new JSONObject();
+            requestBody.put("password", passwordInput);
+            requestBody.put("username", userInput);
+
+            logRequestToConsole(requestBody, "GooglePost");
+            return requestBody;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private JSONObject constructGoogleRequest() {
+        try {
+            JSONObject requestBody = new JSONObject();
+            requestBody.put("idToken", idToken);
+            requestBody.put("authCode", authCode);
+
+            logRequestToConsole(requestBody, "SignInPost");
+            return requestBody;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    private void logRequestToConsole(JSONObject request, String tag) {
+        Log.d(tag, "Request JSON: " + request.toString());
     }
 }
