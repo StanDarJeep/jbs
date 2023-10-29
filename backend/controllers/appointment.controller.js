@@ -216,7 +216,6 @@ async function checkUserManualAvailability(
                 && availStart.isSameOrBefore(requestedStartTime)
                 && availEnd.isSameOrAfter(requestedEndTime)
         })
-        console.log(`avail ${availabilities}`)
         if (availabilities.length == 0) {
             return false
         }
