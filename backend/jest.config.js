@@ -25,6 +25,7 @@ const config = {
     '**/*.{js,jsx}',
     '!**/node_modules/**',
     '!**/vendor/**',
+    '!**/*.config.{js,jsx}',
   ],
 
   // The directory where Jest should output its coverage files
@@ -32,7 +33,9 @@ const config = {
 
   // An array of regexp pattern strings used to skip coverage collection
   coveragePathIgnorePatterns: [
-    "/node_modules/"
+    "/node_modules/",
+    "/coverage/",
+    "/tests/"
   ],
 
   // Indicates which provider should be used to instrument code for coverage
