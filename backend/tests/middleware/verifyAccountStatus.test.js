@@ -1,3 +1,4 @@
+const crypto = require("crypto")
 const db = require("../../db")
 const { account } = require("../../middleware")
 const { initReqResMock } = require("../utils/express.mock.utils")
@@ -6,7 +7,7 @@ jest.mock('../../db')
 
 describe("Verify account status", () => {
     test("Verify an existing and unbanned user", async () => {
-        var userId = Math.random().toString(36).substring(12)
+        var userId = crypto.randomBytes(12).toString('hex')
         const mockUser = {
             _id: userId,
             isBanned: false
@@ -27,7 +28,7 @@ describe("Verify account status", () => {
     })
 
     test("Return 403 for a banned user", async () => {
-        var userId = Math.random().toString(36).substring(12)
+        var userId = crypto.randomBytes(12).toString('hex')
         const mockUser = {
             _id: userId,
             isBanned: true
@@ -49,7 +50,7 @@ describe("Verify account status", () => {
     })
 
     test("Return 403 for nonexisting user", async () => {
-        var userId = Math.random().toString(36).substring(12)
+        var userId = crypto.randomBytes(12).toString('hex')
         db.user.findById.mockResolvedValue(undefined);
 
         var {req, res, resSendMock} = initReqResMock()
@@ -68,7 +69,7 @@ describe("Verify account status", () => {
     })
 
     test("Return 500 for an error during user lookup", async () => {
-        var userId = Math.random().toString(36).substring(12)
+        var userId = crypto.randomBytes(12).toString('hex')
         const errorMessage = 'Database error';
         db.user.findById.mockRejectedValue(new Error(errorMessage));
 
