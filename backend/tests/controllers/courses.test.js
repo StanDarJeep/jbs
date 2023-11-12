@@ -1,11 +1,23 @@
 const axios = require("axios")
+const request = require('supertest');
 const { getCourseCodes } = require("../../controllers/courses.controller")
-const { initReqResMock } = require("../utils/express.mock.utils")
+const { initReqResMock } = require("../utils/express.mock.utils");
+const {app, closeServer} = require("../../server");
 
 jest.mock('axios')
 
+afterAll((done) => {
+    closeServer()
+    done()
+})
+
+// Interface GET https://edumatch.canadacentral.cloudapp.azure.com/courses
 describe("Get course codes", () => {
     // ChatGPT usage: Yes
+    // Input: the query `code` is a valid program
+    // Expected status code: 200
+    // Expected behavior: Returns a list of course codes of the program
+    // Expected output: a list of course codes of the program
     test("Valid program code", async () => {
         const code = "CPEN"
         const expectedData = [
@@ -44,45 +56,46 @@ describe("Get course codes", () => {
             )
         }
         axios.get.mockResolvedValue(mockUbcGradesResponse)
-        var {req, res, resSendMock} = initReqResMock()
+        const res = await request(app)
+            .get("/courses")
+            .query({ code })
         
-        req.query = {
-            code
-        }
-        
-        await getCourseCodes(req, res);
-
-        expect(res.status).toHaveBeenCalledWith(200);
-        expect(resSendMock).toHaveBeenCalledWith({
-            courses: expectedData,
-        });
+        expect(res.status).toBe(200)
+        expect(res.body).toEqual({
+            courses: expectedData
+        })
     })
 
     // ChatGPT usage: Yes
+    // Input: the query `code` is empty
+    // Expected status code: 400
+    // Expected behavior: none. UBCGrades API shouldn't be called
+    // Expected output: a message saying `code` is required
     test("Empty query", async () => {
-        var {req, res, resSendMock} = initReqResMock()
-        req.query = {}
-        await getCourseCodes(req, res);
+        const res = await request(app)
+            .get("/courses")
 
-        expect(res.status).toHaveBeenCalledWith(400);
-        expect(resSendMock).toHaveBeenCalledWith({ 
+        expect(res.status).toBe(400);
+        expect(res.body).toEqual({ 
             message: 'code is required' 
         });
     })
 
     // ChatGPT usage: Yes
+    // Input: the query `code` is an invalid program
+    // Expected status code: 500
+    // Expected behavior: sends back UBCGrades API error message
+    // Expected output: UBCGrades API error message
     test("Invalid query, 3rd party API error", async () => {
         const errorMessage = 'Internal Server Error';
         axios.get.mockRejectedValue(new Error(errorMessage));
-        var {req, res, resSendMock} = initReqResMock()
-        req.query = {
-            code: "invalid code"
-        }
-        
-        await getCourseCodes(req, res).catch(err => {
-            expect(res.status).toHaveBeenCalledWith(500);
-            expect(resSendMock).toHaveBeenCalledWith({ message: errorMessage });
-        })
+        const res = await request(app)
+            .get("/courses")
+            .query({ code: "invalid code" })
+            
+        expect(res.status).toBe(500);
+        expect(res.body).toEqual({ message: errorMessage });
+            
     })
 })
 
