@@ -1,15 +1,9 @@
 const axios = require("axios")
 const request = require('supertest');
 const { getCourseCodes } = require("../../controllers/courses.controller")
-const { initReqResMock } = require("../utils/express.mock.utils");
-const {app, closeServer} = require("../../server");
+const { initReqResMock, app } = require("../utils/express.mock.utils");
 
 jest.mock('axios')
-
-afterAll((done) => {
-    closeServer()
-    done()
-})
 
 // Interface GET https://edumatch.canadacentral.cloudapp.azure.com/courses
 describe("Get course codes", () => {

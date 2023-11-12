@@ -174,21 +174,3 @@ if (env === 'prod') {
         console.log(`Server is running on port ${PORT} locally.`);
     });
 }
-
-function closeServer() {
-    if (server) {
-        server.close((err) => {
-            if (err) {
-                console.error('Error closing server:', err);
-            } else {
-            console.log(`Server ${server.address} closed`);
-            }
-        })
-    }
-    db.mongoose.disconnect()
-}
-
-module.exports = {
-    app,
-    closeServer
-}
