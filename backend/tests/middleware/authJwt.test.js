@@ -1,16 +1,12 @@
 const crypto = require("crypto")
 const jwt = require('jsonwebtoken');
-const jwt2 = require("jsonwebtoken");
-
-const path = require("path");
-require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') })
-
 const { verifyJwt } = require('../../middleware/authJwt');
 const { initReqResMock } = require('../utils/express.mock.utils');
 
 SECRET_KEY = process.env.SECRET_KEY
 
 describe("Verify JWT", () => {
+    // ChatGPT usage: Yes
     test("Verify a valid JWT", async () => {
         var userId = crypto.randomBytes(12).toString('hex')
         const jwtToken = jwt.sign(userId, SECRET_KEY)
@@ -26,6 +22,7 @@ describe("Verify JWT", () => {
         expect(res.status).not.toHaveBeenCalled();
     })
 
+    // ChatGPT usage: Yes
     test("Return 403 for no token provided", async () => {
         var {req, res, resSendMock} = initReqResMock()
         req.header = jest.fn()
@@ -38,6 +35,7 @@ describe("Verify JWT", () => {
         expect(next).not.toHaveBeenCalled();
     })
 
+    // ChatGPT usage: Yes
     test("Return 403 for failed token verification", async () => {
         var userId = crypto.randomBytes(12).toString('hex')
         const jwtToken = jwt.sign(userId, "wrong secret key")
@@ -53,6 +51,7 @@ describe("Verify JWT", () => {
         expect(next).not.toHaveBeenCalled();
     })
 
+    // ChatGPT usage: No
     test("Return 500 for an error", async () => {
         // Mock the JWT library
 
