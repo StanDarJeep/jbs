@@ -25,9 +25,8 @@ db.mongoose
         useNewUrlParser: true,
         useUnifiedTopology: true
     })
-    .then((conn) => {
+    .then(() => {
         console.log("Successfully connected to MongoDB")
-        return conn
     })
     .catch(err => {
         console.error("Connection error", err)
@@ -55,8 +54,6 @@ conversationRoutes(app)
 app.get("/health", (req, res) => {
     return res.status(200).send({message: 'OK'})
 })
-
-var server
 
 if (env === 'prod') {
     // PRODUCTION
@@ -170,7 +167,7 @@ if (env === 'prod') {
     });
 } else {
     // LOCAL
-    server = app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
         console.log(`Server is running on port ${PORT} locally.`);
     });
 }

@@ -53,8 +53,6 @@ describe("Verify JWT", () => {
 
     // ChatGPT usage: No
     test("Return 500 for an error", async () => {
-        // Mock the JWT library
-
         const errorMessage = 'Token verification error';
 
         var {req, res, resSendMock} = initReqResMock()
