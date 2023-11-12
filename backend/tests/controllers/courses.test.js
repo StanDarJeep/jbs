@@ -1,6 +1,6 @@
 const axios = require("axios")
-const { getCourseCodes } = require("../controllers/courses.controller")
-const { initReqResMock } = require("./utils/express.mock.utils")
+const { getCourseCodes } = require("../../controllers/courses.controller")
+const { initReqResMock } = require("../utils/express.mock.utils")
 
 jest.mock('axios')
 
