@@ -101,8 +101,8 @@ beforeEach(() => {
 
 const User = db.user
 
+// Interface POST https://edumatch.canadacentral.cloudapp.azure.com/api/auth/google
 describe("Google Auth",  () => {
-
     // ChatGPT Usage: Partial
     // Input: Valid `idToken` and `authCode`
     // Expected status code: 200
@@ -309,7 +309,7 @@ describe("Google Auth",  () => {
     })
 })
 
-
+// Interface POST https://edumatch.canadacentral.cloudapp.azure.com/api/auth/signup
 describe("Manual sign up", () => {
     // ChatGPT Usage: No
     // Input: new user data with nonexisting username and email
@@ -513,6 +513,7 @@ describe("Manual sign up", () => {
     })
 })
 
+// Interface POST https://edumatch.canadacentral.cloudapp.azure.com/api/auth/signup
 describe("Continue signup after Google Auth", () => {
     // ChatGPT Usage: No
     // Input: valid user data for an existing Google user
@@ -671,6 +672,7 @@ describe("Continue signup after Google Auth", () => {
     })
 })
 
+// Interface POST https://edumatch.canadacentral.cloudapp.azure.com/api/auth/login
 describe("Login", () => {
     // ChatGPT Usage: Partial
     // Input: correct username and password
