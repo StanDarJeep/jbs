@@ -205,3 +205,5 @@ async function verify(idToken, authCode) {
         return Promise.reject(err)
     })
 }
+
+module.exports.DEFAULT_RECOMMENDATION_WEIGHTS = DEFAULT_RECOMMENDATION_WEIGHTS
