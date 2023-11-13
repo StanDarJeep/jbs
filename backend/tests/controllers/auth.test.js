@@ -1,10 +1,9 @@
 const bcrypt = require("bcryptjs");
-const crypto = require("crypto")
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const { google } = require('googleapis');
 const mongoose = require('mongoose');
-const { MOCKED_VALUES, mockOAuth2 } = require('../utils/googleapis.mock.utils');
+const { MOCKED_VALUES } = require('../utils/googleapis.mock.utils');
 const { app } = require('../utils/express.mock.utils');
 const { verifySignUp } = require("../../middleware")
 

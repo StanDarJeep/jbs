@@ -11,25 +11,6 @@ const MOCKED_VALUES = {
     }
 }
 
-
-let mockOAuth2 = () => {
-    return {
-        verifyIdToken: jest.fn(() => {
-            return {
-                getPayload: jest.fn(() => MOCKED_VALUES.payload)
-            }
-        }),
-        getToken: jest.fn(() => {
-            return {
-                tokens: MOCKED_VALUES.tokens
-            }
-        })
-    } 
-    
-}
-
-
 module.exports = {
-    mockOAuth2,
     MOCKED_VALUES
 }
