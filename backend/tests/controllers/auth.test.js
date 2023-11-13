@@ -13,20 +13,45 @@ const { UserType } = require("../../constants/user.types");
 const { DEFAULT_RECOMMENDATION_WEIGHTS } = require("../../controllers/auth.controller");
 SECRET_KEY = process.env.SECRET_KEY
 
+var mockErrorMsg
+
+var mockGoogleErrorMsg
+var mockReturnEmptyTokens = false
+
 // ChatGPT Usage: Partial
 jest.mock('googleapis', () => {
     return {
         google: {
             auth: {
-                OAuth2: jest.fn((...args) => mockOAuth2(...args))
+                OAuth2: jest.fn(() => {
+                    return {
+                        verifyIdToken: jest.fn(() => {
+                            if (mockGoogleErrorMsg) {
+                                return Promise.reject(new Error(mockGoogleErrorMsg))
+                            }
+                            return {
+                                getPayload: jest.fn(() => MOCKED_VALUES.payload)
+                            }
+                        }),
+                        getToken: jest.fn(() => {
+                            if (mockReturnEmptyTokens) {
+                                console.log("line 38")
+                                return {tokens: undefined}
+                            }
+                            return {
+                                tokens: MOCKED_VALUES.tokens
+                            }
+                        })
+                    }
+                })
             }
         }
-    }
+        
+    } 
 })
 
 var mockAddedUsers = []
 
-var mockErrorMsg
 var mockUnableToCreateUser = false
 
 // ChatGPT Usage: Partial
@@ -37,7 +62,7 @@ jest.mock('../../db', () => {
 
         static findByIdAndUpdate = jest.fn((id, data) => {
             if (mockErrorMsg) {
-                throw new Error(mockErrorMsg)
+                return Promise.reject(new Error(mockErrorMsg))
             }
             mockAddedUsers[0] = {
                 ...mockAddedUsers[0],
@@ -48,7 +73,7 @@ jest.mock('../../db', () => {
 
         save = jest.fn(() => {
             if (mockErrorMsg) {
-                throw new Error(mockErrorMsg)
+                return Promise.reject(new Error(mockErrorMsg))
             }
             if (mockUnableToCreateUser) {
                 return Promise.resolve(undefined)
@@ -67,8 +92,11 @@ jest.mock("../../middleware")
 
 
 beforeEach(() => {
+    jest.clearAllMocks()
+    mockReturnEmptyTokens = false
     mockUnableToCreateUser = false
     mockErrorMsg = undefined
+    mockGoogleErrorMsg = undefined
     mockAddedUsers = []
 })
 
@@ -95,7 +123,7 @@ describe("Google Auth",  () => {
             isBanned: false
         }
 
-        User.findOne.mockResolvedValue(undefined);
+        User.findOne.mockResolvedValueOnce(undefined);
        
         const res = await request(app)
             .post('/api/auth/google')
@@ -142,7 +170,7 @@ describe("Google Auth",  () => {
             type: UserType.TUTEE
         }
 
-        User.findOne.mockResolvedValue(mockUser);
+        User.findOne.mockResolvedValueOnce(mockUser);
        
         const res = await request(app)
             .post('/api/auth/google')
@@ -178,7 +206,7 @@ describe("Google Auth",  () => {
             isBanned: true,
             type: UserType.TUTEE
         }
-        User.findOne.mockResolvedValue(mockUser)
+        User.findOne.mockResolvedValueOnce(mockUser)
 
         const res = await request(app)
             .post('/api/auth/google')
@@ -200,8 +228,8 @@ describe("Google Auth",  () => {
     // Expected behavior: Database unchanged
     // Expected output: error message
     test("Return 500 for a database error", async () => {
-        const errorMessage = 'Internal Server Error';        
-        User.findOne.mockRejectedValue(new Error(errorMessage));
+        const errorMessage = 'Internal Server Error12';        
+        User.findOne.mockRejectedValueOnce(new Error(errorMessage));
 
         const res = await request(app)
             .post('/api/auth/google')
@@ -223,17 +251,7 @@ describe("Google Auth",  () => {
     // Expected behavior: Database unchanged
     // Expected output: error message
     test("Return 500 for an invalid idToken", async () => {
-        const errorMessage = 'Invalid idToken';        
-        User.findOne.mockRejectedValue(new Error(errorMessage));
-
-        const mockOAuth2Client = new google.auth.OAuth2(
-            "googleClientId",
-            "googleClientSecret",
-            "redirectUri"  
-        );
-
-        mockOAuth2Client.verifyIdToken.mockRejectedValue(new Error(errorMessage))
-
+        mockGoogleErrorMsg  = 'Invalid idToken';        
         const res = await request(app)
             .post('/api/auth/google')
             .send({ 
@@ -244,7 +262,7 @@ describe("Google Auth",  () => {
         expect(res.status).toBe(500)
         expect(mockAddedUsers.length).toBe(0)
         expect(res.body).toEqual({
-            message: errorMessage
+            message: mockGoogleErrorMsg
         })
     })
 
@@ -253,17 +271,8 @@ describe("Google Auth",  () => {
     // Expected status code: 500
     // Expected behavior: Database unchanged
     // Expected output: error message
-    test("Return 500 for an invalid idToken", async () => {
-        const errorMessage = 'Invalid authCode';        
-        User.findOne.mockRejectedValue(new Error(errorMessage));
-
-        const mockOAuth2Client = new google.auth.OAuth2(
-            "googleClientId",
-            "googleClientSecret",
-            "redirectUri"  
-        );
-
-        mockOAuth2Client.getToken.mockRejectedValue(new Error(errorMessage))
+    test("Return 500 for an invalid authCode", async () => {
+        mockGoogleErrorMsg = 'Invalid authCode';        
 
         const res = await request(app)
             .post('/api/auth/google')
@@ -275,8 +284,29 @@ describe("Google Auth",  () => {
         expect(res.status).toBe(500)
         expect(mockAddedUsers.length).toBe(0)
         expect(res.body).toEqual({
-            message: errorMessage
+            message: mockGoogleErrorMsg
         })
+    })
+
+    // ChatGPT Usage: No
+    // Input: Invalid `authCode`
+    // Expected status code: 500
+    // Expected behavior: Add a new user to the db without setting googleOauth field
+    // Expected output: the added user
+    test("Empty google access tokens", async () => {
+        mockReturnEmptyTokens = true
+        User.findOne.mockResolvedValueOnce(undefined);
+        const res = await request(app)
+            .post('/api/auth/google')
+            .send({ 
+                idToken: 'valid-id-token', 
+                authCode: 'invalid-auth-code' 
+            })
+        
+        expect(res.status).toBe(200)
+        expect(mockAddedUsers.length).toBe(1)
+        var addedUser = mockAddedUsers[0]
+        expect(addedUser.googleOauth).not.toBeDefined()
     })
 })
 
@@ -639,5 +669,108 @@ describe("Continue signup after Google Auth", () => {
         expect(res.body).toEqual({ 
             message: mockErrorMsg
         })
+    })
+})
+
+describe("Login", () => {
+    // ChatGPT Usage: Partial
+    // Input: correct username and password
+    // Expected status code: 200
+    // Expected behavior: authenticate the user
+    // Expected output: the user's JWT and type
+    test("Valid login credentials", async () => {
+        const mockUser = {
+            _id: new mongoose.Types.ObjectId(),
+            username: 'testUser',
+            password: bcrypt.hashSync('password123'),
+            type: UserType.TUTEE,
+        };
+
+        User.findOne.mockResolvedValueOnce(mockUser)
+        const res = await request(app)
+            .post('/api/auth/login')
+            .send({
+                username: 'testUser',
+                password: 'password123',
+            });
+        
+        const jwtToken = jwt.sign(mockUser._id.toString(), SECRET_KEY)
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual({
+            jwtToken,
+            type: mockUser.type
+        })
+    })
+
+    // ChatGPT Usage: Partial
+    // Input: nonexisting username
+    // Expected status code: 404
+    // Expected behavior: unable to find user in db
+    // Expected output: error message saying user is not found or banned
+    test('User not found', async () => {
+        User.findOne.mockResolvedValueOnce(null);
+    
+        const res = await request(app)
+            .post('/api/auth/login')
+            .send({
+                username: 'testUser',
+                password: 'password123',
+            });
+    
+        expect(res.status).toBe(404);
+        expect(res.body).toEqual(
+            {message: 'User is not found or is banned'}
+        );
+    });
+
+
+    // ChatGPT Usage: Partial
+    // Input: incorrect password
+    // Expected status code: 401
+    // Expected behavior: unable to authenticate the user
+    // Expected output: error message
+    test("Incorrect credentials", async () => {
+        const mockUser = {
+            _id: new mongoose.Types.ObjectId(),
+            username: 'testUser',
+            password: bcrypt.hashSync('correct-password'),
+            type: UserType.TUTEE,
+        };
+
+        User.findOne.mockResolvedValueOnce(mockUser)
+        const res = await request(app)
+            .post('/api/auth/login')
+            .send({
+                username: 'testUser',
+                password: 'incorrect-password',
+            });
+        
+        expect(res.status).toBe(401);
+        expect(res.body).toEqual({
+            message: 'Username or password is incorrect'
+        });
+
+    })
+
+    // ChatGPT Usage: No
+    // Input: correct username and password
+    // Expected status code: 500
+    // Expected behavior: db unchanged
+    // Expected output: error message
+    test("Return 500 for database error", async () => {
+        const errorMessage = "Intenal Server Error"
+        User.findOne.mockRejectedValueOnce(new Error(errorMessage))
+        const res = await request(app)
+            .post('/api/auth/login')
+            .send({
+                username: 'testUser',
+                password: 'password',
+            });
+        
+        expect(res.status).toBe(500);
+        expect(res.body).toEqual({
+            message: errorMessage
+        });
+
     })
 })
