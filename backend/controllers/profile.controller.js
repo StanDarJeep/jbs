@@ -23,46 +23,43 @@ const ALLOWED_TO_CHANGE = [
 
 // ChatGPT usage: No
 exports.getPublicProfile = (req, res) => {
-    try {
-        var userId = req.query.userId
-        if (!userId) {
-            return res.status(400).send({ message: "Must specify userId."})
+    
+    var userId = req.query.userId
+    if (!userId) {
+        return res.status(400).send({ message: "Must specify userId."})
+    }
+
+    User.findById(userId).then(user => {
+        if (!user || user.isBanned) {
+            return res.status(404).send({ message: "User not found."})
         }
-    
-        User.findById(userId).then(user => {
-            if (!user || user.isBanned) {
-                return res.status(404).send({ message: "User not found."})
-            }
-            
-            var ratings = user.userReviews
-            ratings.sort((fb1, fb2) => fb2.rating - fb1.rating)
-            var top2Ratings
-            if (ratings.length <= 2) {
-                top2Ratings = ratings
-            } else {
-                top2Ratings = ratings.slice(0, 3)
-            }
-    
-            var data = {
-                displayedName: user.displayedName,
-                overallRating: ratingController.getOverallRating(ratings),
-                bio: user.bio,
-                school: user.education.school,
-                program: user.education.program,
-                courses: user.education.courses,
-                tags: user.education.tags,
-                subjectHourlyRate: user.subjectHourlyRate,
-                top2Ratings
-            }
-            return res.status(200).send(data)
-        }).catch(err => {
-            console.log(err)
-            return res.status(500).send({ message: err.message })
-        })
-    } catch (err) {
+        
+        var ratings = user.userReviews
+        ratings.sort((fb1, fb2) => fb2.rating - fb1.rating)
+        var top2Ratings
+        if (ratings.length <= 2) {
+            top2Ratings = ratings
+        } else {
+            top2Ratings = ratings.slice(0, 3)
+        }
+
+        var data = {
+            displayedName: user.displayedName,
+            overallRating: ratingController.getOverallRating(ratings),
+            bio: user.bio,
+            school: user.education.school,
+            program: user.education.program,
+            courses: user.education.courses,
+            tags: user.education.tags,
+            subjectHourlyRate: user.subjectHourlyRate,
+            top2Ratings
+        }
+        return res.status(200).send(data)
+    }).catch(err => {
         console.log(err)
         return res.status(500).send({ message: err.message })
-    }
+    })
+    
 }
 
 // ChatGPT usage: No
