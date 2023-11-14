@@ -7,6 +7,7 @@ const { UserType } = require('../../../constants/user.types');
 const { LocationMode } = require('../../../constants/location.modes');
 const { DEFAULT_RECOMMENDATION_WEIGHTS } = require('../../../controllers/auth.controller');
 const { EXCLUDED_FIELDS } = require('../../../controllers/profile.controller');
+const { filterOutExcludedFields } = require('../../utils/profile.utils');
 
 const ENDPOINT = "/user/profile"
 
@@ -63,7 +64,6 @@ jest.mock("../../../middleware")
 
 
 beforeEach(() => {
-    jest.clearAllMocks()
     mockUnableToCreateUser = false
     mockErrorMsg = undefined
     mockAddedUsers = []
@@ -134,16 +134,13 @@ describe("Get user's private profile", () => {
             hasSignedUp: true
         }
 
-        var expectedData = {}
-        for (var key of Object.keys(mockUser)) {
-            if (!MOCK_EXCLUDED_FIELDS.includes(`-${key}`)) {
-                expectedData[key] = mockUser[key]
-            }
-        }
+        var expectedData = filterOutExcludedFields(mockUser)
 
         User.findById.mockImplementationOnce((userId) => {
             return {
-                select: jest.fn(() => Promise.resolve(expectedData))
+                select: jest.fn((excludedList) => Promise.resolve(
+                    filterOutExcludedFields(mockUser, excludedList)
+                ))
             }
         })
 

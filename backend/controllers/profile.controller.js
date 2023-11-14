@@ -76,32 +76,23 @@ exports.getPrivateProfile = (req, res) => {
 
 // ChatGPT usage: No
 exports.editProfile = (req, res) => {
-    try {
-        var userId = req.userId
-        var data = {}
-        var keys = Object.keys(req.body)
-        for (var key of keys) {
-            if (ALLOWED_TO_CHANGE.includes(key)) {
-                data[key] = req.body[key]
-            }
+    var userId = req.userId
+    var data = {}
+    var keys = Object.keys(req.body)
+    for (var key of keys) {
+        if (ALLOWED_TO_CHANGE.includes(key)) {
+            data[key] = req.body[key]
         }
-
-        User.findByIdAndUpdate(userId, {...data}, {new: true})
-            .select(EXCLUDED_FIELDS)
-            .then(updatedUser => {
-                if (!updatedUser || updatedUser.isBanned) {
-                    return res.status(404).send({ message: "User not found."})
-                    
-                }
-                return res.status(200).send(updatedUser)
-                
-            }).catch(err => {
-                console.log(err)
-                return res.status(500).send({ message: err.message })
-            })
-    } catch (err) {
-        console.log(err)
-        return res.status(500).send({ message: err.message })
     }
+
+    User.findByIdAndUpdate(userId, {...data}, {new: true})
+        .select(EXCLUDED_FIELDS)
+        .then(updatedUser => {
+            return res.status(200).send(updatedUser)
+        }).catch(err => {
+            console.log(err)
+            return res.status(500).send({ message: err.message })
+        })
+
 }
 

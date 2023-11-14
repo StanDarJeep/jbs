@@ -44,7 +44,6 @@ jest.mock('../../../db', () => {
 })
 
 beforeEach(() => {
-    jest.clearAllMocks()
     mockUnableToCreateUser = false
     mockErrorMsg = undefined
     mockAddedUsers = []
