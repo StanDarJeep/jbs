@@ -7,7 +7,8 @@ const EXCLUDED_FIELDS = [
     "-googleId",
     "-password",
     "-googleOauth",
-    "-recommendationWeights"
+    "-recommendationWeights",
+    "-hasSignedUp"
 ]
 
 const ALLOWED_TO_CHANGE = [
@@ -64,21 +65,13 @@ exports.getPublicProfile = (req, res) => {
 
 // ChatGPT usage: No
 exports.getPrivateProfile = (req, res) => {
-    try {
-        var userId = req.userId
-        User.findById(userId).select(EXCLUDED_FIELDS).then(user => {
-            if (!user || user.isBanned) {
-                return res.status(404).send({ message: "User not found."})
-            }
-            return res.status(200).send(user)
-        }).catch(err => {
-            console.log(err)
-            return res.status(500).send({ message: err.message })
-        })
-    } catch (err) {
+    var userId = req.userId
+    User.findById(userId).select(EXCLUDED_FIELDS).then(user => {
+        return res.status(200).send(user)
+    }).catch(err => {
         console.log(err)
         return res.status(500).send({ message: err.message })
-    }
+    })
 }
 
 // ChatGPT usage: No
@@ -111,3 +104,4 @@ exports.editProfile = (req, res) => {
         return res.status(500).send({ message: err.message })
     }
 }
+
