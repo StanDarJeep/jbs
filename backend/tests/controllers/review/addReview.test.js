@@ -80,25 +80,6 @@ jest.mock('../../../db', () => {
 
 jest.mock("../../../middleware")
 
-// jest.mock("../../../utils/appointment.utils", () => {
-//     const originalPkg = jest.requireActual('../../../utils/appointment.utils')
-//     return {
-        
-//         appointmentIsAccepted: jest.fn((...args) => {
-//             if (mockErrorMsg) {
-//                 return Promise.reject(new Error(mockErrorMsg))
-//             }
-//             return originalPkg.appointmentIsAccepted(...args)
-//         }),
-//         appointmentIsCompleted: jest.fn((...args) => {
-//             if (mockErrorMsg) {
-//                 return Promise.reject(new Error(mockErrorMsg))
-//             }
-//             return originalPkg.appointmentIsCompleted(...args)
-//         })
-//     }
-// })
-
 beforeEach(() => {
     mockUnableToCreateUser = false
     mockErrorMsg = undefined
@@ -242,10 +223,6 @@ describe("Add review", () => {
     // Expected behavior: Forbid the user to add review. Database unchanged
     // Expected output: error message
     test("Shouldn't proceed and return 403 if the appointment wasn't accepted", async () => {
-        User.findById
-            .mockResolvedValueOnce(mockReviewer)
-            .mockResolvedValueOnce(mockReceiver)
-    
         var start = momenttz()
             .tz(PST_TIMEZONE)
             .subtract(5, 'days')
@@ -303,10 +280,6 @@ describe("Add review", () => {
     // Expected behavior: Forbid the user to add review. Database unchanged
     // Expected output: error message
     test("Shouldn't proceed and return 403 if the appointment hasn't completed", async () => {
-        User.findById
-            .mockResolvedValueOnce(mockReviewer)
-            .mockResolvedValueOnce(mockReceiver)
-    
         var start = momenttz()
             .tz(PST_TIMEZONE)
             .add(5, 'days')
@@ -467,6 +440,133 @@ describe("Add review", () => {
         expect(res.status).toBe(500)
         expect(res.body).toEqual({ message: mockErrorMsg })
         expect(mockAddedModels.length).toBe(0)
+    })
+
+    // ChatGPT Usage: No
+    // Input: 
+    //  (1) Valid and existing userId
+    //  (2) Review data for an existing, banned receiver
+    // Expected status code: 404
+    // Expected behavior: Database unchanged
+    // Expected output: message saying user not found
+    test("Should return 404 when the receiver is banned", async () => {
+        var bannedReceiver = {
+            _id: new mongoose.Types.ObjectId(),
+            displayedName: "Mock Receiver",
+            userReviews: [],
+            overallRating: 0,
+            isBanned: true
+        }
+
+        User.findById
+            .mockResolvedValueOnce(mockReviewer)
+            .mockResolvedValueOnce(bannedReceiver)
+        
+        var start = momenttz()
+            .tz(PST_TIMEZONE)
+            .subtract(5, 'days')
+    
+        var end = start.add(2, 'hours')
+        var mockAppointment = new Appointment ({
+            _id: new mongoose.Types.ObjectId(),
+            participantsInfo: [
+                { userId: bannedReceiver._id.toString() },
+                { userId: mockUserId.toString() },
+            ], 
+            course: "test course",
+            pstStartDatetime: start.toISOString(true),
+            pstEndDatetime: end.toISOString(true),
+            location: "test location",
+            status: AppointmentStatus.ACCEPTED,
+            notes: "blablabla"
+        })
+
+        Appointment.findById
+            .mockResolvedValueOnce(mockAppointment)
+            .mockResolvedValueOnce(mockAppointment)
+            .mockResolvedValueOnce(mockAppointment)
+
+        const review = {
+            rating: 4,
+            noShow: false,
+            late: false,
+            comment: "blablabla",
+            appointmentId: mockAppointment._id.toString()
+        }
+        
+        const mockReviewBody = {
+            receiverId: bannedReceiver._id.toString(),
+            ...review
+        }
+
+        const res = await request(app)
+            .post(ENDPOINT)
+            .set('Authorization', 'Bearer mockToken')
+            .send(mockReviewBody)
+
+        expect(res.status).toBe(404)
+        expect(res.body).toEqual({ message: "user not found" })
+        expect(mockAddedModels.length).toBe(0)
+    })
+
+    // ChatGPT Usage: No
+    // Input: 
+    //  (1) Valid and existing userId
+    //  (2) Review data for an existing, unbanned receiver
+    // Expected status code: 404
+    // Expected behavior: Database unchanged
+    // Expected output: message saying user not found
+    test("Should return 404 when receiver is not found during saving data", async () => {
+        User.findById
+            .mockResolvedValueOnce(mockReviewer)
+            .mockResolvedValueOnce(mockReceiver)
+        
+        var start = momenttz()
+            .tz(PST_TIMEZONE)
+            .subtract(5, 'days')
+    
+        var end = start.add(2, 'hours')
+
+        var mockAppointment = new Appointment ({
+            _id: new mongoose.Types.ObjectId(),
+            participantsInfo: [
+                { userId: mockReceiver._id.toString() },
+                { userId: mockUserId.toString() },
+            ], 
+            course: "test course",
+            pstStartDatetime: start.toISOString(true),
+            pstEndDatetime: end.toISOString(true),
+            location: "test location",
+            status: AppointmentStatus.ACCEPTED,
+            notes: "blablabla"
+        })
+
+        Appointment.findById
+            .mockResolvedValueOnce(mockAppointment)
+            .mockResolvedValueOnce(mockAppointment)
+            .mockResolvedValueOnce(mockAppointment)
+
+        const review = {
+            rating: 4,
+            noShow: false,
+            late: false,
+            comment: "blablabla",
+            appointmentId: mockAppointment._id.toString()
+        }
+        
+        const mockReviewBody = {
+            receiverId: mockReceiver._id.toString(),
+            ...review
+        }
+
+        mockUnableToCreateUser = true
+        const res = await request(app)
+            .post(ENDPOINT)
+            .set('Authorization', 'Bearer mockToken')
+            .send(mockReviewBody)
+        
+        expect(res.status).toBe(404)
+        expect(res.body).toEqual({ message: "user not found"})
     })
 })
 
