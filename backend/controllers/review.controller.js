@@ -1,33 +1,22 @@
 const db = require("../db")
-const Appointment = require("../db/appointment.model")
 const apptUtils = require("../utils/appointment.utils")
+
 const User = db.user
+const Appointment = db.appointment
 
 // ChatGPT usage: No
 exports.addReview = async (req, res) => {
-    console.log("add review")
-
-    try {
-        console.log("")
-        
+    try {        
         if (!req.body.appointmentId) {
             return res.status(400).send({message: "appointmentId is required"})
         }
         
         var appointmentIsAccepted = await apptUtils
             .appointmentIsAccepted(req.body.appointmentId)
-            .catch(err => {
-                console.log(err)
-                return res.status(500).send({ message: err.message })
-            })
-            
+              
         var appointmentIsCompleted = await apptUtils
             .appointmentIsCompleted(req.body.appointmentId)
-            .catch(err => {
-                console.log(err)
-                return res.status(500).send({ message: err.message })
-            })
-        
+    
         if (!appointmentIsAccepted) {
             return res.status(403).send({ 
                 message: "The appointment hasn't been accepted" 
@@ -40,22 +29,10 @@ exports.addReview = async (req, res) => {
         }
     
         var appointment = await Appointment.findById(req.body.appointmentId)
-            .catch(err => {
-                console.log(err)
-                return res.status(500).send({ message: err.message })
-            })
     
         var reviewerId = req.userId
-        var reviewer = await User
-            .findById(reviewerId)
-            .catch(err => {
-                console.log(err)
-                return res.status(500).send({ message: err.message })
-            })
-            
-        if (!reviewer || reviewer.isBanned) {
-            return res.status(400).send({message: "user not found"})
-        }
+        var reviewer = await User.findById(reviewerId)
+
         var reviewerDisplayedName = reviewer.displayedName
             
         var userReview = {
@@ -64,13 +41,8 @@ exports.addReview = async (req, res) => {
             ...req.body
         }
     
-        var receiver = await User
-            .findById(req.body.receiverId)
-            .catch(err => {
-                console.log(err)
-                return res.status(500).send({ message: err.message })
-            })
-            
+        var receiver = await User.findById(req.body.receiverId)
+
         if (!receiver || receiver.isBanned) {
             return res.status(400).send({message: "user not found"})
         }
@@ -89,10 +61,7 @@ exports.addReview = async (req, res) => {
                 }
                 return ret
             })
-            .catch(err => {
-                console.log(err)
-                return res.status(500).send({ message: err.message })
-            })
+            
     
         for (var i = 0; i < 2; i++) {
             var participant = appointment.participantsInfo[i]
@@ -102,12 +71,8 @@ exports.addReview = async (req, res) => {
             }
         }
     
-        appointment.save().then(result => {
-            return res.status(200).send(ret)
-        }).catch(err => {
-            console.log(err)
-            return res.status(500).send({ message: err.message })
-        })
+        await appointment.save() 
+        return res.status(200).send(ret)
     } catch (err) {
         console.log(err)
         return res.status(500).send({message: err.message})
