@@ -495,7 +495,7 @@ describe("Book appointment for a manually-signed-up user", () => {
             mockAddedAppts = originalAddedApts
             var date = mockMoment()
                 .tz(PST_TIMEZONE)
-                .add(6 + i, "days")
+                .add(7 + i, "days")
         
             for (var j = 0; j < mockAddedUsers.length; j++) {
                 mockAddedUsers[j].useGoogleCalendar = false
@@ -529,7 +529,8 @@ describe("Book appointment for a manually-signed-up user", () => {
                 .send({ 
                     tutorId, pstStartDatetime, pstEndDatetime
                 });
-            console.log(`line 532 ${res.body.message}`)
+            console.log(`line 532 ${i}`)
+            console.log(`line 533 ${i} ${res.body.message}`)
             expect(res.status).toBe(200)
             var newAppt = res.body
             expect(newAppt.pstStartDatetime).toEqual(pstStartDatetime)
