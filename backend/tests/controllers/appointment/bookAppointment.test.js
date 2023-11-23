@@ -529,6 +529,9 @@ describe("Book appointment for a manually-signed-up user", () => {
                 .send({ 
                     tutorId, pstStartDatetime, pstEndDatetime
                 });
+            console.log(pstStartDatetime)
+            console.log(pstEndDatetime)
+            console.log(JSON.stringify(mockAddedUsers[0].appointments, null, 4))
             console.log(`line 532 ${i}`)
             console.log(`line 533 ${i} ${res.body.message}`)
             expect(res.status).toBe(200)
