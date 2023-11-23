@@ -529,6 +529,7 @@ describe("Book appointment for a manually-signed-up user", () => {
                 .send({ 
                     tutorId, pstStartDatetime, pstEndDatetime
                 });
+            console.log(`line 532 ${res.body.message}`)
             expect(res.status).toBe(200)
             var newAppt = res.body
             expect(newAppt.pstStartDatetime).toEqual(pstStartDatetime)
