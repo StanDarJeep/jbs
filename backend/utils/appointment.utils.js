@@ -94,6 +94,7 @@ async function checkUserManualAvailability(
                 && availEnd.isSameOrAfter(requestedEndTime)
         })
         if (availabilities.length === 0) {
+            console.log("line 97")
             return false
         }
     }
@@ -128,6 +129,7 @@ async function checkUserManualAvailability(
             
         } 
     )
+    console.log(`line 132 ${JSON.stringify(conflicts, null, 4)}`)
     return conflicts.length === 0
 }
 
