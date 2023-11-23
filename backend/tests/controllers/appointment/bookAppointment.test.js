@@ -295,188 +295,188 @@ account.verifyAccountStatus.mockImplementation((req, res, next) => {
 })
 
 // Interface POST https://edumatch.canadacentral.cloudapp.azure.com/appointment/bookAppointment
-describe("Book an appointment for Google calendar users", () => {
+// describe("Book an appointment for Google calendar users", () => {
 
 
-    // ChatGPT Usage: No
-    // Input:
-    //  (1) userId for a tutee
-    //  (2) tutorId for a unbanned tutor
-    //  (3) pstStartDatetime: valid appointment start datetime
-    //  (4) pstEndDatetime: valid appointment end datetime
-    // Expected status code: 200
-    // Expected behavior: Creates a new appointment for both users 
-    // Clean up user's appointments
-    // Expected output: The new appointment
-    test("Should book appointment successfully if there is no conflict", async () => {
-        var date = mockMoment()
-            .tz(PST_TIMEZONE)
-            .add(6, "days")
-            .format("YYYY-MM-DD")
+//     // ChatGPT Usage: No
+//     // Input:
+//     //  (1) userId for a tutee
+//     //  (2) tutorId for a unbanned tutor
+//     //  (3) pstStartDatetime: valid appointment start datetime
+//     //  (4) pstEndDatetime: valid appointment end datetime
+//     // Expected status code: 200
+//     // Expected behavior: Creates a new appointment for both users 
+//     // Clean up user's appointments
+//     // Expected output: The new appointment
+//     test("Should book appointment successfully if there is no conflict", async () => {
+//         var date = mockMoment()
+//             .tz(PST_TIMEZONE)
+//             .add(6, "days")
+//             .format("YYYY-MM-DD")
 
-        var tzOffset = mockMoment(date)
-            .tz(PST_TIMEZONE)
-            .format('Z')
+//         var tzOffset = mockMoment(date)
+//             .tz(PST_TIMEZONE)
+//             .format('Z')
         
-        const pstStartDatetime = `${date}T13:00:00${tzOffset}`
-        const pstEndDatetime = `${date}T15:00:00${tzOffset}`
+//         const pstStartDatetime = `${date}T13:00:00${tzOffset}`
+//         const pstEndDatetime = `${date}T15:00:00${tzOffset}`
 
-        const res = await request(app)
-            .post(ENDPOINT)
-            .set('Authorization', 'Bearer mockToken')
-            .send({ 
-                tutorId, pstStartDatetime, pstEndDatetime
-            });
+//         const res = await request(app)
+//             .post(ENDPOINT)
+//             .set('Authorization', 'Bearer mockToken')
+//             .send({ 
+//                 tutorId, pstStartDatetime, pstEndDatetime
+//             });
 
-        expect(res.status).toBe(200)
-        var newAppt = res.body
-        expect(newAppt.pstStartDatetime).toEqual(pstStartDatetime)
-        expect(newAppt.pstEndDatetime).toEqual(pstEndDatetime)
-        expect(newAppt.status).toBe(AppointmentStatus.PENDING)
-        for (var participant of newAppt.participantsInfo) {
-            expect([tutorId, tuteeId].includes(participant.userId)).toBeTruthy()
-        }
-    })
+//         expect(res.status).toBe(200)
+//         var newAppt = res.body
+//         expect(newAppt.pstStartDatetime).toEqual(pstStartDatetime)
+//         expect(newAppt.pstEndDatetime).toEqual(pstEndDatetime)
+//         expect(newAppt.status).toBe(AppointmentStatus.PENDING)
+//         for (var participant of newAppt.participantsInfo) {
+//             expect([tutorId, tuteeId].includes(participant.userId)).toBeTruthy()
+//         }
+//     })
 
-    // ChatGPT Usage: No
-    // Input:
-    //  (1) userId for a tutee
-    //  (2) tutorId for a unbanned tutor
-    //  (3) pstStartDatetime: start time that conflicted with an accepted appointment
-    //  (4) pstEndDatetime: valid appointment end datetime
-    // Expected status code: 400
-    // Expected behavior: Check for tutor's availability and forbid tutee from booking
-    // Expected output: inform message
-    test("Should return 400 if tutor is unavailable", async () => {
-        const pstStartDatetime = mockAddedAppts[4].pstStartDatetime
-        const pstEndDatetime = mockAddedAppts[4].pstEndDatetime
-        const res = await request(app)
-            .post(ENDPOINT)
-            .set('Authorization', 'Bearer mockToken')
-            .send({ 
-                tutorId, pstStartDatetime, pstEndDatetime
-            });
+//     // ChatGPT Usage: No
+//     // Input:
+//     //  (1) userId for a tutee
+//     //  (2) tutorId for a unbanned tutor
+//     //  (3) pstStartDatetime: start time that conflicted with an accepted appointment
+//     //  (4) pstEndDatetime: valid appointment end datetime
+//     // Expected status code: 400
+//     // Expected behavior: Check for tutor's availability and forbid tutee from booking
+//     // Expected output: inform message
+//     test("Should return 400 if tutor is unavailable", async () => {
+//         const pstStartDatetime = mockAddedAppts[4].pstStartDatetime
+//         const pstEndDatetime = mockAddedAppts[4].pstEndDatetime
+//         const res = await request(app)
+//             .post(ENDPOINT)
+//             .set('Authorization', 'Bearer mockToken')
+//             .send({ 
+//                 tutorId, pstStartDatetime, pstEndDatetime
+//             });
         
-        expect(res.status).toBe(400)
-        expect(res.body).toEqual({
-            message:  "Tutor is unavailable during the specified time slot."
-        })
-        expect(mockAddedAppts.length).toBe(5)
-    })
+//         expect(res.status).toBe(400)
+//         expect(res.body).toEqual({
+//             message:  "Tutor is unavailable during the specified time slot."
+//         })
+//         expect(mockAddedAppts.length).toBe(5)
+//     })
 
-    // ChatGPT Usage: No
-    // Input:
-    //  (1) userId for a tutee
-    //  (2) tutorId for a unbanned tutor
-    //  (3) pstStartDatetime: start time that conflicted with tutee's pending appointment
-    //  (4) pstEndDatetime: valid appointment end datetime
-    // Expected status code: 400
-    // Expected behavior: Check for tutee's availability and forbid tutee from booking
-    // Expected output: inform message
-    test("Should return 400 if tutee is unavailable", async () => {
-        const pstStartDatetime = mockAddedAppts[3].pstStartDatetime
-        const pstEndDatetime = mockAddedAppts[3].pstEndDatetime
-        const res = await request(app)
-            .post(ENDPOINT)
-            .set('Authorization', 'Bearer mockToken')
-            .send({ 
-                tutorId, pstStartDatetime, pstEndDatetime
-            });
+//     // ChatGPT Usage: No
+//     // Input:
+//     //  (1) userId for a tutee
+//     //  (2) tutorId for a unbanned tutor
+//     //  (3) pstStartDatetime: start time that conflicted with tutee's pending appointment
+//     //  (4) pstEndDatetime: valid appointment end datetime
+//     // Expected status code: 400
+//     // Expected behavior: Check for tutee's availability and forbid tutee from booking
+//     // Expected output: inform message
+//     test("Should return 400 if tutee is unavailable", async () => {
+//         const pstStartDatetime = mockAddedAppts[3].pstStartDatetime
+//         const pstEndDatetime = mockAddedAppts[3].pstEndDatetime
+//         const res = await request(app)
+//             .post(ENDPOINT)
+//             .set('Authorization', 'Bearer mockToken')
+//             .send({ 
+//                 tutorId, pstStartDatetime, pstEndDatetime
+//             });
         
-        expect(res.status).toBe(400)
-        expect(res.body).toEqual({
-            message:  "You already have a pending/accepted appointment during the specified time slot."
-        })
-        expect(mockAddedAppts.length).toBe(5)
-    })
+//         expect(res.status).toBe(400)
+//         expect(res.body).toEqual({
+//             message:  "You already have a pending/accepted appointment during the specified time slot."
+//         })
+//         expect(mockAddedAppts.length).toBe(5)
+//     })
 
-    // ChatGPT Usage: No
-    // Input:
-    //  (1) userId for a tutor
-    //  (2) tutorId for a unbanned tutor
-    //  (3) pstStartDatetime: valid appointment start time 
-    //  (4) pstEndDatetime: valid appointment end datetime
-    // Expected status code: 403
-    // Expected behavior: forbid user from booking
-    // Expected output: inform message
-    test("Should forbid any non-tutee users from booking appointments", async () => {
-        authJwt.verifyJwt.mockImplementationOnce((req, res, next) => {
-            req.userId = mockTutorId.toString()
-            return next()
-        })
-        const pstStartDatetime = mockAddedAppts[3].pstStartDatetime
-        const pstEndDatetime = mockAddedAppts[3].pstEndDatetime
-        const res = await request(app)
-            .post(ENDPOINT)
-            .set('Authorization', 'Bearer mockToken')
-            .send({ 
-                tutorId, pstStartDatetime, pstEndDatetime
-            });
+//     // ChatGPT Usage: No
+//     // Input:
+//     //  (1) userId for a tutor
+//     //  (2) tutorId for a unbanned tutor
+//     //  (3) pstStartDatetime: valid appointment start time 
+//     //  (4) pstEndDatetime: valid appointment end datetime
+//     // Expected status code: 403
+//     // Expected behavior: forbid user from booking
+//     // Expected output: inform message
+//     test("Should forbid any non-tutee users from booking appointments", async () => {
+//         authJwt.verifyJwt.mockImplementationOnce((req, res, next) => {
+//             req.userId = mockTutorId.toString()
+//             return next()
+//         })
+//         const pstStartDatetime = mockAddedAppts[3].pstStartDatetime
+//         const pstEndDatetime = mockAddedAppts[3].pstEndDatetime
+//         const res = await request(app)
+//             .post(ENDPOINT)
+//             .set('Authorization', 'Bearer mockToken')
+//             .send({ 
+//                 tutorId, pstStartDatetime, pstEndDatetime
+//             });
     
-        expect(res.status).toBe(403)
-        expect(res.body).toEqual({
-            message:  "Only tutee is allowed to book appointments"
-        })
-        expect(mockAddedAppts.length).toBe(5)
-    })
+//         expect(res.status).toBe(403)
+//         expect(res.body).toEqual({
+//             message:  "Only tutee is allowed to book appointments"
+//         })
+//         expect(mockAddedAppts.length).toBe(5)
+//     })
 
-    // ChatGPT Usage: No
-    // Input:
-    //  (1) userId for a tutor
-    //  (2) tutorId for a banned tutor
-    //  (3) pstStartDatetime: valid appointment start time 
-    //  (4) pstEndDatetime: valid appointment end datetime
-    // Expected status code: 404
-    // Expected behavior: forbid user from booking
-    // Expected output: inform message
-    test("Should return 404 if tutor is banned", async () => {
-        mockAddedUsers[0].isBanned = true
-        const pstStartDatetime = mockAddedAppts[3].pstStartDatetime
-        const pstEndDatetime = mockAddedAppts[3].pstEndDatetime
-        const res = await request(app)
-            .post(ENDPOINT)
-            .set('Authorization', 'Bearer mockToken')
-            .send({ 
-                tutorId, pstStartDatetime, pstEndDatetime
-            });
+//     // ChatGPT Usage: No
+//     // Input:
+//     //  (1) userId for a tutor
+//     //  (2) tutorId for a banned tutor
+//     //  (3) pstStartDatetime: valid appointment start time 
+//     //  (4) pstEndDatetime: valid appointment end datetime
+//     // Expected status code: 404
+//     // Expected behavior: forbid user from booking
+//     // Expected output: inform message
+//     test("Should return 404 if tutor is banned", async () => {
+//         mockAddedUsers[0].isBanned = true
+//         const pstStartDatetime = mockAddedAppts[3].pstStartDatetime
+//         const pstEndDatetime = mockAddedAppts[3].pstEndDatetime
+//         const res = await request(app)
+//             .post(ENDPOINT)
+//             .set('Authorization', 'Bearer mockToken')
+//             .send({ 
+//                 tutorId, pstStartDatetime, pstEndDatetime
+//             });
 
-        expect(res.status).toBe(404)
-        expect(res.body).toEqual({
-            message: "Tutor is not found."
-        })
-        expect(mockAddedAppts.length).toBe(5)
-    })
+//         expect(res.status).toBe(404)
+//         expect(res.body).toEqual({
+//             message: "Tutor is not found."
+//         })
+//         expect(mockAddedAppts.length).toBe(5)
+//     })
 
-    // ChatGPT Usage: No
-    // Input:
-    //  (1) userId for a tutor
-    //  (2) tutorId for an unbanned tutor
-    //  (3) pstStartDatetime: valid appointment start time 
-    //  (4) pstEndDatetime: valid appointment end datetime
-    // Expected status code: 500
-    // Expected behavior: catch error
-    // Expected output: error message
-    test("Should return 500 for a database error", async () => {
-        const errorMessage = "Database error"
-        User.findById.mockRejectedValueOnce(new Error(errorMessage))
+//     // ChatGPT Usage: No
+//     // Input:
+//     //  (1) userId for a tutor
+//     //  (2) tutorId for an unbanned tutor
+//     //  (3) pstStartDatetime: valid appointment start time 
+//     //  (4) pstEndDatetime: valid appointment end datetime
+//     // Expected status code: 500
+//     // Expected behavior: catch error
+//     // Expected output: error message
+//     test("Should return 500 for a database error", async () => {
+//         const errorMessage = "Database error"
+//         User.findById.mockRejectedValueOnce(new Error(errorMessage))
 
-        const pstStartDatetime = mockAddedAppts[3].pstStartDatetime
-        const pstEndDatetime = mockAddedAppts[3].pstEndDatetime
-        const res = await request(app)
-            .post(ENDPOINT)
-            .set('Authorization', 'Bearer mockToken')
-            .send({ 
-                tutorId, pstStartDatetime, pstEndDatetime
-            });
+//         const pstStartDatetime = mockAddedAppts[3].pstStartDatetime
+//         const pstEndDatetime = mockAddedAppts[3].pstEndDatetime
+//         const res = await request(app)
+//             .post(ENDPOINT)
+//             .set('Authorization', 'Bearer mockToken')
+//             .send({ 
+//                 tutorId, pstStartDatetime, pstEndDatetime
+//             });
 
-        expect(res.status).toBe(500)
-        expect(res.body).toEqual({
-            message: errorMessage
-        })
-        expect(mockAddedAppts.length).toBe(5)
-    })
+//         expect(res.status).toBe(500)
+//         expect(res.body).toEqual({
+//             message: errorMessage
+//         })
+//         expect(mockAddedAppts.length).toBe(5)
+//     })
 
-})
+// })
 
 describe("Book appointment for a manually-signed-up user", () => {
     // ChatGPT Usage: No

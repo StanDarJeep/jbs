@@ -95,16 +95,16 @@ async function checkUserManualAvailability(
         })
         if (availabilities.length === 0) {
             console.log("line 97")
-            return false
+            return Promise.resolve(false)
         }
     }
     if (user.appointments.length === 0) {
-        return true
+        return Promise.resolve(true)
     }
 
     var upcomingAppointments = await cleanupUserAppointments(user)
     if (upcomingAppointments.length == 0) {
-        return true
+        return Promise.resolve(true)
     }
     
     // TUTEE: a pending appointment is considered unavailable for the tutee
@@ -116,7 +116,7 @@ async function checkUserManualAvailability(
         )
     }
     if (acceptedAppointments.length === 0) {
-        return true
+        return Promise.resolve(true)
     }
 
     var conflicts = acceptedAppointments.filter(
@@ -131,7 +131,7 @@ async function checkUserManualAvailability(
     )
     console.log(`line 132 ${JSON.stringify(conflicts, null, 4)}`)
     console.log(`line 133 ${conflicts.length === 0}`)
-    return conflicts.length === 0
+    return Promise.resolve(conflicts.length === 0)
 }
 
 function isConflicted(appt1, appt2) {
