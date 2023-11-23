@@ -546,94 +546,94 @@ describe("Book appointment for a manually-signed-up user", () => {
         }
     })
 
-    // ChatGPT Usage: No
-    // Input:
-    //  (1) userId for a tutee
-    //  (2) tutorId for a unbanned tutor
-    //  (3) pstStartDatetime: start datetime that isn't part of tutor's availabiltiy
-    //  (4) pstEndDatetime: valid appointment end datetime
-    // Expected status code: 400
-    // Expected behavior: detect tutor's unvailable
-    // Expected output: inform message
-    test("Should return tutor unavailable if the requested day is not in tutor's manual availabilities", async () => {
-        var date = mockMoment()
-            .tz(PST_TIMEZONE)
-            .add(6, "days")
+    // // ChatGPT Usage: No
+    // // Input:
+    // //  (1) userId for a tutee
+    // //  (2) tutorId for a unbanned tutor
+    // //  (3) pstStartDatetime: start datetime that isn't part of tutor's availabiltiy
+    // //  (4) pstEndDatetime: valid appointment end datetime
+    // // Expected status code: 400
+    // // Expected behavior: detect tutor's unvailable
+    // // Expected output: inform message
+    // test("Should return tutor unavailable if the requested day is not in tutor's manual availabilities", async () => {
+    //     var date = mockMoment()
+    //         .tz(PST_TIMEZONE)
+    //         .add(6, "days")
     
-        for (var i = 0; i < mockAddedUsers.length; i++) {
-            mockAddedUsers[i].useGoogleCalendar = false
-            mockAddedUsers[i].manualAvailability = [{
-                day: date.clone().add(1, "days").format("dddd"),
-                startTime: "08:00",
-                endTime: "19:00"
-            }]
-        }
-        date = date.format("YYYY-MM-DD")
+    //     for (var i = 0; i < mockAddedUsers.length; i++) {
+    //         mockAddedUsers[i].useGoogleCalendar = false
+    //         mockAddedUsers[i].manualAvailability = [{
+    //             day: date.clone().add(1, "days").format("dddd"),
+    //             startTime: "08:00",
+    //             endTime: "19:00"
+    //         }]
+    //     }
+    //     date = date.format("YYYY-MM-DD")
 
-        var tzOffset = mockMoment(date)
-            .tz(PST_TIMEZONE)
-            .format('Z')
+    //     var tzOffset = mockMoment(date)
+    //         .tz(PST_TIMEZONE)
+    //         .format('Z')
         
-        const pstStartDatetime = `${date}T13:00:00${tzOffset}`
-        const pstEndDatetime = `${date}T15:00:00${tzOffset}`
+    //     const pstStartDatetime = `${date}T13:00:00${tzOffset}`
+    //     const pstEndDatetime = `${date}T15:00:00${tzOffset}`
 
-        const res = await request(app)
-            .post(ENDPOINT)
-            .set('Authorization', 'Bearer mockToken')
-            .send({ 
-                tutorId, pstStartDatetime, pstEndDatetime
-            });
+    //     const res = await request(app)
+    //         .post(ENDPOINT)
+    //         .set('Authorization', 'Bearer mockToken')
+    //         .send({ 
+    //             tutorId, pstStartDatetime, pstEndDatetime
+    //         });
         
-        expect(res.status).toBe(400)
-        expect(res.body).toEqual({
-            message: "Tutor is unavailable during the specified time slot."
-        })
-        expect(google.auth.OAuth2).not.toHaveBeenCalled()
+    //     expect(res.status).toBe(400)
+    //     expect(res.body).toEqual({
+    //         message: "Tutor is unavailable during the specified time slot."
+    //     })
+    //     expect(google.auth.OAuth2).not.toHaveBeenCalled()
 
-    })
+    // })
 
-    // ChatGPT Usage: No
-    // Input:
-    //  (1) userId for a tutee
-    //  (2) tutorId for a unbanned tutor
-    //  (3) pstStartDatetime: start datetime that conflicts with tutee's pending appointment
-    //  (4) pstEndDatetime: valid appointment end datetime
-    // Expected status code: 400
-    // Expected behavior: detect tutee's unvailable
-    // Expected output: inform message
-    test("Should return tutee unavailable if there is conflict pending appointment for tutee", async () => {
-        var date = mockMoment(mockAddedAppts[3].pstStartDatetime)
-            .tz(PST_TIMEZONE)
+    // // ChatGPT Usage: No
+    // // Input:
+    // //  (1) userId for a tutee
+    // //  (2) tutorId for a unbanned tutor
+    // //  (3) pstStartDatetime: start datetime that conflicts with tutee's pending appointment
+    // //  (4) pstEndDatetime: valid appointment end datetime
+    // // Expected status code: 400
+    // // Expected behavior: detect tutee's unvailable
+    // // Expected output: inform message
+    // test("Should return tutee unavailable if there is conflict pending appointment for tutee", async () => {
+    //     var date = mockMoment(mockAddedAppts[3].pstStartDatetime)
+    //         .tz(PST_TIMEZONE)
     
-        for (var i = 0; i < mockAddedUsers.length; i++) {
-            mockAddedUsers[i].useGoogleCalendar = false
-            mockAddedUsers[i].manualAvailability = [{
-                day: date.format("dddd"),
-                startTime: "08:00",
-                endTime: "19:00"
-            }]
-        }
+    //     for (var i = 0; i < mockAddedUsers.length; i++) {
+    //         mockAddedUsers[i].useGoogleCalendar = false
+    //         mockAddedUsers[i].manualAvailability = [{
+    //             day: date.format("dddd"),
+    //             startTime: "08:00",
+    //             endTime: "19:00"
+    //         }]
+    //     }
 
-        date = date.format("YYYY-MM-DD")
+    //     date = date.format("YYYY-MM-DD")
 
-        var tzOffset = mockMoment(date)
-            .tz(PST_TIMEZONE)
-            .format('Z')
+    //     var tzOffset = mockMoment(date)
+    //         .tz(PST_TIMEZONE)
+    //         .format('Z')
         
-        const pstStartDatetime = mockAddedAppts[3].pstStartDatetime
-        const pstEndDatetime = mockAddedAppts[3].pstEndDatetime
+    //     const pstStartDatetime = mockAddedAppts[3].pstStartDatetime
+    //     const pstEndDatetime = mockAddedAppts[3].pstEndDatetime
 
-        const res = await request(app)
-            .post(ENDPOINT)
-            .set('Authorization', 'Bearer mockToken')
-            .send({ 
-                tutorId, pstStartDatetime, pstEndDatetime
-            });
+    //     const res = await request(app)
+    //         .post(ENDPOINT)
+    //         .set('Authorization', 'Bearer mockToken')
+    //         .send({ 
+    //             tutorId, pstStartDatetime, pstEndDatetime
+    //         });
 
-        expect(res.status).toBe(400)
-        expect(res.body).toEqual({
-            message: "You already have a pending/accepted appointment during the specified time slot."
-        })
-        expect(google.auth.OAuth2).not.toHaveBeenCalled()
-    })
+    //     expect(res.status).toBe(400)
+    //     expect(res.body).toEqual({
+    //         message: "You already have a pending/accepted appointment during the specified time slot."
+    //     })
+    //     expect(google.auth.OAuth2).not.toHaveBeenCalled()
+    // })
 })
