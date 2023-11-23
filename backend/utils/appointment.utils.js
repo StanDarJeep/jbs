@@ -88,7 +88,10 @@ async function checkUserManualAvailability(
         var availabilities = user.manualAvailability.filter(avail => {
             var availStart = momenttz(avail.startTime, "HH:mm")
             var availEnd = momenttz(avail.endTime, "HH:mm")
-
+            console.log(`avail day ${avail.day}`)
+            console.log(`request day ${requestedDay}`)
+            console.log(availStart.isSameOrBefore(requestedStartTime))
+            console.log(availEnd.isSameOrAfter(requestedEndTime))
             return avail.day === requestedDay
                 && availStart.isSameOrBefore(requestedStartTime)
                 && availEnd.isSameOrAfter(requestedEndTime)
