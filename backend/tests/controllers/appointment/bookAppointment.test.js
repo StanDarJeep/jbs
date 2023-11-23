@@ -490,7 +490,9 @@ describe("Book appointment for a manually-signed-up user", () => {
     // Clean up user's appointments
     // Expected output: The new appointment
     test("Should book appointment successfully if there is no conflict for tutor", async () => {
+        var originalAddedApts = [...mockAddedAppts]
         for (var i = 0; i < 4; i++) {
+            mockAddedAppts = originalAddedApts
             var date = mockMoment()
                 .tz(PST_TIMEZONE)
                 .add(6 + i, "days")
