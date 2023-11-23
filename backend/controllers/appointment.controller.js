@@ -363,7 +363,7 @@ exports.bookAppointment = async (req, res) => {
             .isAvailable(
                 tutor, req.body.pstStartDatetime, req.body.pstEndDatetime
             )
-        
+        console.log(`line 366 ${tutorIsAvailable}`)
         var tuteeIsAvailable = await apptUtils
             .isAvailable(
                 tutee, req.body.pstStartDatetime, req.body.pstEndDatetime

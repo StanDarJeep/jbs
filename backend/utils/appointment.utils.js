@@ -130,6 +130,7 @@ async function checkUserManualAvailability(
         } 
     )
     console.log(`line 132 ${JSON.stringify(conflicts, null, 4)}`)
+    console.log(`line 133 ${conflicts.length === 0}`)
     return conflicts.length === 0
 }
 
