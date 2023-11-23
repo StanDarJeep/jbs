@@ -26,16 +26,15 @@ exports.isAvailable = async (user, pstStartDatetime, pstEndDatetime) => {
 // pending/accepted appointments
 async function cleanupUserAppointments(user) {
     var upcomingAppointments = []
-    if (user.appointments) {
-        for (var appt of user.appointments) {
-            var status = await getAppointmentStatus(appt._id)
-            var isCompleted = await appointmentIsCompleted(appt._id)
+    for (var appt of user.appointments) {
+        var status = await getAppointmentStatus(appt._id)
+        var isCompleted = await appointmentIsCompleted(appt._id)
 
-            if (!isCompleted && status !== AppointmentStatus.CANCELED) {
-                upcomingAppointments.push(appt)
-            }
+        if (!isCompleted && status !== AppointmentStatus.CANCELED) {
+            upcomingAppointments.push(appt)
         }
     }
+    
 
     return await 
         User.findByIdAndUpdate(
