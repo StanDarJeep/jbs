@@ -88,28 +88,22 @@ async function checkUserManualAvailability(
         var availabilities = user.manualAvailability.filter(avail => {
             var availStart = momenttz(avail.startTime, "HH:mm")
             var availEnd = momenttz(avail.endTime, "HH:mm")
-            console.log(`avail day ${avail.day}`)
-            console.log(`request day ${requestedDay}`)
-            console.log(availStart.isSameOrBefore(requestedStartTime))
-            console.log(availEnd.isSameOrAfter(requestedEndTime))
-            console.log(`availend ${availEnd}`)
-            console.log(`req end: ${requestedEndTime}`)
+            
             return avail.day === requestedDay
                 && availStart.isSameOrBefore(requestedStartTime)
                 && availEnd.isSameOrAfter(requestedEndTime)
         })
         if (availabilities.length === 0) {
-            console.log("line 97")
-            return Promise.resolve(false)
+            return false
         }
     }
     if (user.appointments.length === 0) {
-        return Promise.resolve(true)
+        return true
     }
 
     var upcomingAppointments = await cleanupUserAppointments(user)
     if (upcomingAppointments.length == 0) {
-        return Promise.resolve(true)
+        return true
     }
     
     // TUTEE: a pending appointment is considered unavailable for the tutee
@@ -121,7 +115,7 @@ async function checkUserManualAvailability(
         )
     }
     if (acceptedAppointments.length === 0) {
-        return Promise.resolve(true)
+        return true
     }
 
     var conflicts = acceptedAppointments.filter(
@@ -134,9 +128,8 @@ async function checkUserManualAvailability(
             
         } 
     )
-    console.log(`line 132 ${JSON.stringify(conflicts, null, 4)}`)
-    console.log(`line 133 ${conflicts.length === 0}`)
-    return Promise.resolve(conflicts.length === 0)
+
+    return conflicts.length === 0
 }
 
 function isConflicted(appt1, appt2) {
