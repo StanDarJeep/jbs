@@ -115,7 +115,9 @@ exports.getTutorAvailability = async (req, res) => {
             return res.status(200).send(ret)
         } else {
             if (tutor.manualAvailability) {
-                var requestedDay = momenttz(date).tz(PST_TIMEZONE).format("dddd")
+                var requestedDay = momenttz(`${date}T00:00:00${tzOffset}`)
+                    .tz(PST_TIMEZONE)
+                    .format("dddd")
                 var dayAvailabilities = tutor.manualAvailability.filter(avail => {
                     return avail.day === requestedDay 
                 })
