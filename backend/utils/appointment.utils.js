@@ -77,11 +77,11 @@ async function checkUserManualAvailability(
     if (user.manualAvailability && user.type === UserType.TUTOR) {
         var requestedDay = momenttz(pstStartDatetime).format("dddd")
         var requestedStartTime = momenttz(
-            momenttz(pstStartDatetime).format("HH:mm"),
+            momenttz(pstStartDatetime).tz(PST_TIMEZONE).format("HH:mm"),
             "HH:mm"
         )
         var requestedEndTime = momenttz(
-            momenttz(pstEndDatetime).format("HH:mm"),
+            momenttz(pstEndDatetime).tz(PST_TIMEZONE).format("HH:mm"),
             "HH:mm"
         )
 
