@@ -315,6 +315,7 @@ describe("Get tutor availability for a manually-signed-up user", () => {
         }
 
         date = date.format('YYYY-MM-DD')
+        console.log(`line 318 ${date}`)
         var tzOffset = momenttz(date)
             .tz(PST_TIMEZONE)
             .format('Z')
