@@ -120,6 +120,8 @@ exports.getTutorAvailability = async (req, res) => {
                     return avail.day === requestedDay 
                 })
                 var availabilities = []
+                console.log(JSON.stringify(tutor.manualAvailability, null, 4))
+                console.log(requestedDay)
                 console.log(`line 123 ${dayAvailabilities}`)
                 for (var block of dayAvailabilities) {            
                     var start = momenttz(`${date}T${block.startTime}:00${tzOffset}`)
