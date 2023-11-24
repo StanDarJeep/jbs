@@ -92,6 +92,8 @@ async function checkUserManualAvailability(
             console.log(`request day ${requestedDay}`)
             console.log(availStart.isSameOrBefore(requestedStartTime))
             console.log(availEnd.isSameOrAfter(requestedEndTime))
+            console.log(`availend ${availEnd}`)
+            console.log(`req end: ${requestedEndTime}`)
             return avail.day === requestedDay
                 && availStart.isSameOrBefore(requestedStartTime)
                 && availEnd.isSameOrAfter(requestedEndTime)
