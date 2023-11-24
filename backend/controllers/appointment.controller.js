@@ -120,7 +120,7 @@ exports.getTutorAvailability = async (req, res) => {
                     return avail.day === requestedDay 
                 })
                 var availabilities = []
-                
+                console.log(`line 123 ${dayAvailabilities}`)
                 for (var block of dayAvailabilities) {            
                     var start = momenttz(`${date}T${block.startTime}:00${tzOffset}`)
                         .tz(PST_TIMEZONE)
@@ -131,6 +131,7 @@ exports.getTutorAvailability = async (req, res) => {
                     var availability = await apptUtils.getManualFreeTimes(
                         tutor, start, end
                     )
+                    console.log(`line 134 ${JSON.stringify(availability, null, 4)}`)
                     availabilities = availabilities.concat(availability)
                 }
 
